@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashscore.mobi Enhanced | Football LIVE</title>
+    <style>
+        :root {
+            --bg: #001e28;
+            --bg2: #0a2a36;
+            --bg3: #123040;
+            --text: #e8f0f4;
+            --text-muted: #8ba3b0;
+            --accent: #00a651;
+            --red: #e74c3c;
+            --yellow: #f1c40f;
+            --border: #1a3a48;
+            --odd: #2a4a5a;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .header {
+            background: #00141c;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+        .logo span { color: var(--accent); }
+        .nav-sports, .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+            font-size: 13px;
+        }
+        .nav-sports a, .nav-tabs a {
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+        .nav-sports a.active, .nav-tabs a.active {
+            color: #fff;
+            font-weight: 600;
+        }
+        .nav-tabs { margin-top: 8px; }
+        .refresh {
+            display: inline-block;
+            margin: 10px 12px 0;
+            color: var(--accent);
+            font-size: 13px;
+            text-decoration: none;
+        }
+        .page-title {
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+        .league {
+            background: var(--bg2);
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .match {
+            display: grid;
+            grid-template-columns: 48px 1fr auto 110px;
+            gap: 8px;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+        .match:hover { background: var(--bg3); }
+        .minute {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 13px;
+            text-align: center;
+        }
+        .minute.ht { color: var(--yellow); }
+        .teams {
+            min-width: 0;
+        }
+        .team {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 1px 0;
+        }
+        .team-name { overflow: hidden; text-overflow: ellipsis; }
+        .score-block {
+            text-align: center;
+            min-width: 90px;
+        }
+        .score-main {
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+        }
+        .half-score {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 1px;
+        }
+        .red-cards {
+            font-size: 10px;
+            color: var(--red);
+            font-weight: 700;
+            line-height: 1;
+            min-height: 12px;
+        }
+        .subs {
+            font-size: 10px;
+            color: #5dade2;
+            font-weight: 600;
+            line-height: 1;
+            min-height: 12px;
+        }
+        .score-num {
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .score-sep {
+            font-weight: 400;
+            color: var(--text-muted);
+            margin: 0 1px;
+        }
+        .odds {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: right;
+            white-space: nowrap;
+        }
+        .odds span {
+            display: inline-block;
+            background: var(--odd);
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin-left: 2px;
+            min-width: 28px;
+            text-align: center;
+        }
+        .odds .win { color: var(--accent); font-weight: 600; }
+        .legend {
+            padding: 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 8px;
+        }
+        .legend strong { color: var(--text); }
+        .red-dot { color: var(--red); }
+        .sub-dot { color: #5dade2; }
+        .footer {
+            padding: 16px 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+        @media (max-width: 480px) {
+            .match {
+                grid-template-columns: 42px 1fr auto;
+                grid-template-rows: auto auto;
+            }
+            .odds {
+                grid-column: 1 / -1;
+                text-align: left;
+                margin-top: 4px;
+                padding-left: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Flashscore<span>.mobi</span> Enhanced</div>
+        <div class="nav-sports">
+            <a href="#" class="active">Football</a> |
+            <a href="#">Hockey</a> |
+            <a href="#">Tennis</a> |
+            <a href="#">Basketball</a> |
+            <a href="#">Handball</a> |
+            <a href="#">More sports »</a>
+        </div>
+        <div class="nav-tabs">
+            <a href="#">All Games</a> |
+            <a href="#" class="active">LIVE</a> |
+            <a href="#">Finished</a> |
+            <a href="#">Odds</a>
+        </div>
+    </div>
+
+    <a href="#" class="refresh" onclick="location.reload(); return false;">REFRESH NOW</a>
+
+    <div class="page-title">Football » Today » LIVE</div>
+    <div style="padding: 6px 12px; font-size: 12px; color: var(--text-muted);">
+        Sorted by highest playing minute → lowest • Score format: (1H),(2H) • Red cards above • Subs below
+    </div>
+
+    <div id="matches-container">
+        <!-- Matches will be rendered here -->
+    </div>
+
+    <div class="legend">
+        <strong>Legend:</strong><br>
+        Score format: <strong>(a-b),(c-d)</strong> → (1st half home-away), (2nd half home-away)<br>
+        <span class="red-dot">●</span> Number above a score = Red cards in that half for that team<br>
+        <span class="sub-dot">●</span> Number below a score = Substitutions in that half for that team<br>
+        Odds = Pre-match / current 1X2 (Home | Draw | Away)
+    </div>
+
+    <div class="footer">
+        Enhanced Flashscore.mobi style demo • Data is illustrative sample for feature demonstration<br>
+        Gamble Responsibly. 18+
+    </div>
+
+    <script>
+        // Sample live matches – realistic structure with all requested features
+        // Sorted later by minute descending
+        const matches = [
+            {
+                league: "ENGLAND: Premier League",
+                minute: 89,
+                home: "Arsenal",
+                away: "Chelsea",
+                score1H: [1, 0],
+                score2H: [1, 1],
+                reds: { home1H: 0, home2H: 1, away1H: 0, away2H: 0 },
+                subs:  { home1H: 1, home2H: 2, away1H: 1, away2H: 3 },
+                odds: [2.10, 3.40, 3.50]
+            },
+            {
+                league: "SPAIN: LaLiga",
+                minute: 78,
+                home: "Real Madrid",
+                away: "Barcelona",
+                score1H: [0, 1],
+                score2H: [2, 1],
+                reds: { home1H: 0, home2H: 0, away1H: 1, away2H: 0 },
+                subs:  { home1H: 0, home2H: 3, away1H: 1, away2H: 2 },
+                odds: [2.25, 3.30, 3.20]
+            },
+            {
+                league: "ITALY: Serie A",
+                minute: 67,
+                home: "Inter",
+                away: "Juventus",
+                score1H: [1, 1],
+                score2H: [0, 0],
+                reds: { home1H: 0, home2H: 0, away1H: 0, away2H: 0 },
+                subs:  { home1H: 1, home2H: 1, away1H: 0, away2H: 2 },
+                odds: [2.05, 3.25, 3.80]
+            },
+            {
+                league: "GERMANY: Bundesliga",
+                minute: 63,
+                home: "Bayern Munich",
+                away: "Dortmund",
+                score1H: [2, 0],
+                score2H: [1, 1],
+                reds: { home1H: 0, home2H: 0, away1H: 0, away2H: 1 },
+                subs:  { home1H: 0, home2H: 2, away1H: 1, away2H: 2 },
+                odds: [1.55, 4.20, 5.50]
+            },
+            {
+                league: "FRANCE: Ligue 1",
+                minute: 55,
+                home: "PSG",
+                away: "Marseille",
+                score1H: [1, 0],
+                score2H: [0, 0],
+                reds: { home1H: 0, home2H: 0, away1H: 0, away2H: 0 },
+                subs:  { home1H: 0, home2H: 1, away1H: 1, away2H: 0 },
+                odds: [1.40, 4.80, 7.00]
+            },
+            {
+                league: "EUROPE: Champions League",
+                minute: 48,
+                home: "Liverpool",
+                away: "Man City",
+                score1H: [0, 0],
+                score2H: [1, 0],
+                reds: { home1H: 0, home2H: 0, away1H: 0, away2H: 0 },
+                subs:  { home1H: 0, home2H: 0, away1H: 0, away2H: 1 },
+                odds: [2.60, 3.40, 2.70]
+            },
+            {
+                league: "NETHERLANDS: Eredivisie",
+                minute: 41,
+                home: "Ajax",
+                away: "PSV",
+                score1H: [0, 1],
+                score2H: [0, 0],
+                reds: { home1H: 1, home2H: 0, away1H: 0, away2H: 0 },
+                subs:  { home1H: 0, home2H: 0, away1H: 0, away2H: 0 },
+                odds: [2.80, 3.40, 2.45]
+            },
+            {
+                league: "PORTUGAL: Liga Portugal",
+                minute: 34,
+                home: "Benfica",
+                away: "Porto",
+                score1H: [1, 1],
+                score2H: [0, 0],
+                reds: { home1H: 0, home2H: 0, away1H: 0, away2H: 0 },
+                subs:  { home1H: 0, home2H: 0, away1H: 0, away2H: 0 },
+                odds: [2.15, 3.30, 3.40]
+            },
+            {
+                league: "TURKEY: Super Lig",
+                minute: 22,
+                home: "Galatasaray",
+                away: "Fenerbahce",
+                score1H: [0, 0],
+                score2H: [0, 0],
+                reds: { home1H: 0, home2H: 0, away1H: 0, away2H: 0 },
+                subs:  { home1H: 0, home2H: 0, away1H: 0, away2H: 0 },
+                odds: [2.00, 3.40, 3.70]
+            },
+            {
+                league: "BELGIUM: Jupiler Pro League",
+                minute: 12,
+                home: "Anderlecht",
+                away: "Club Brugge",
+                score1H: [0, 0],
+                score2H: [0, 0],
+                reds: { home1H: 0, home2H: 0, away1H: 0, away2H: 0 },
+                subs:  { home1H: 0, home2H: 0, away1H: 0, away2H: 0 },
+                odds: [2.90, 3.20, 2.40]
+            },
+            // Half-time example
+            {
+                league: "SCOTLAND: Premiership",
+                minute: "HT",
+                home: "Celtic",
+                away: "Rangers",
+                score1H: [1, 0],
+                score2H: [0, 0],
+                reds: { home1H: 0, home2H: 0, away1H: 1, away2H: 0 },
+                subs:  { home1H: 1, home2H: 0, away1H: 0, away2H: 0 },
+                odds: [1.85, 3.50, 4.20]
+            },
+            // High red cards / subs example as described by user
+            {
+                league: "DEMO: Feature Showcase",
+                minute: 72,
+                home: "Team Alpha",
+                away: "Team Beta",
+                score1H: [2, 1],
+                score2H: [1, 2],
+                reds: { home1H: 2, home2H: 1, away1H: 3, away2H: 0 },
+                subs:  { home1H: 2, home2H: 1, away1H: 3, away2H: 0 },
+                odds: [3.10, 3.40, 2.30]
+            }
+        ];
+
+        // Sort: highest minute first. HT treated as 45, numbers as-is
+        function getSortValue(m) {
+            if (m.minute === "HT") return 45;
+            if (typeof m.minute === "string" && m.minute.includes("+")) {
+                return parseInt(m.minute) || 90;
+            }
+            return typeof m.minute === "number" ? m.minute : 0;
+        }
+
+        matches.sort((a, b) => getSortValue(b) - getSortValue(a));
+
+        function renderHalf(scoreHome, scoreAway, redHome, redAway, subHome, subAway) {
+            return `
+                <span class="half-score">
+                    <span class="red-cards">${redHome > 0 ? redHome : "&nbsp;"}</span>
+                    <span class="score-num">${scoreHome}</span>
+                    <span class="subs">${subHome > 0 ? subHome : "&nbsp;"}</span>
+                </span>
+                <span class="score-sep">-</span>
+                <span class="half-score">
+                    <span class="red-cards">${redAway > 0 ? redAway : "&nbsp;"}</span>
+                    <span class="score-num">${scoreAway}</span>
+                    <span class="subs">${subAway > 0 ? subAway : "&nbsp;"}</span>
+                </span>
+            `;
+        }
+
+        function renderMatch(m) {
+            const minDisplay = m.minute === "HT" ? "HT" : m.minute + "'";
+            const minClass = m.minute === "HT" ? "minute ht" : "minute";
+
+            const scoreHtml = `
+                <span class="score-main">
+                    (${renderHalf(m.score1H[0], m.score1H[1], m.reds.home1H, m.reds.away1H, m.subs.home1H, m.subs.away1H)})
+                    ,
+                    (${renderHalf(m.score2H[0], m.score2H[1], m.reds.home2H, m.reds.away2H, m.subs.home2H, m.subs.away2H)})
+                </span>
+            `;
+
+            // Highlight lowest odds slightly
+            const minOdd = Math.min(...m.odds);
+            const oddsHtml = m.odds.map(o => {
+                const cls = o === minOdd ? "win" : "";
+                return `<span class="${cls}">${o.toFixed(2)}</span>`;
+            }).join(" ");
+
+            return `
+                <div class="match">
+                    <div class="${minClass}">${minDisplay}</div>
+                    <div class="teams">
+                        <div class="team"><span class="team-name">${m.home}</span></div>
+                        <div class="team"><span class="team-name">${m.away}</span></div>
+                    </div>
+                    <div class="score-block">
+                        ${scoreHtml}
+                    </div>
+                    <div class="odds">${oddsHtml}</div>
+                </div>
+            `;
+        }
+
+        // Group by league while preserving overall minute sort
+        // (We still sort all matches first, then render league headers when league changes)
+        const container = document.getElementById("matches-container");
+        let currentLeague = null;
+
+        matches.forEach(m => {
+            if (m.league !== currentLeague) {
+                currentLeague = m.league;
+                const leagueDiv = document.createElement("div");
+                leagueDiv.className = "league";
+                leagueDiv.textContent = m.league;
+                container.appendChild(leagueDiv);
+            }
+            container.insertAdjacentHTML("beforeend", renderMatch(m));
+        });
+    </script>
+</body>
+</html>
