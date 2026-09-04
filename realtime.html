@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashscore Enhanced | LIVE Football (Realtime)</title>
+    <style>
+        :root {
+            --bg: #001e28;
+            --bg2: #0a2a36;
+            --bg3: #123040;
+            --text: #e8f0f4;
+            --text-muted: #8ba3b0;
+            --accent: #00a651;
+            --red: #e74c3c;
+            --yellow: #f1c40f;
+            --border: #1a3a48;
+            --odd: #2a4a5a;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.4;
+            min-height: 100vh;
+        }
+        .header {
+            background: #00141c;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+        .logo span { color: var(--accent); }
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        .nav-tabs a {
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+        .nav-tabs a.active {
+            color: #fff;
+            font-weight: 600;
+        }
+        .status-bar {
+            padding: 8px 12px;
+            background: var(--bg2);
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .status-bar .live-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--red);
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .refresh-btn {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .page-title {
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+        .league {
+            background: var(--bg2);
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .match {
+            display: grid;
+            grid-template-columns: 70px 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 11px 12px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+        .match:hover { background: var(--bg3); }
+        .minute {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 13px;
+            text-align: center;
+        }
+        .minute.ht { color: var(--yellow); }
+        .teams {
+            min-width: 0;
+        }
+        .team {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 2px 0;
+        }
+        .team img {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+        .team-name { overflow: hidden; text-overflow: ellipsis; }
+        .score-block {
+            text-align: center;
+            min-width: 55px;
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+        }
+        .score-block .sep { color: var(--text-muted); font-weight: 400; }
+        .empty-state, .error-state, .loading {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .error-state { color: var(--red); }
+        .attribution {
+            padding: 14px 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            border-top: 1px solid var(--border);
+            margin-top: 8px;
+        }
+        .attribution a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .footer {
+            padding: 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        @media (max-width: 480px) {
+            .match {
+                grid-template-columns: 60px 1fr auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Flashscore<span>.mobi</span> Enhanced</div>
+        <div class="nav-tabs">
+            <a href="#">All Games</a> |
+            <a href="#" class="active">LIVE</a> |
+            <a href="#">Finished</a> |
+            <a href="#">Odds</a>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div>
+            <span class="live-dot"></span>
+            <span id="live-count">Loading...</span>
+        </div>
+        <div>
+            Last update: <span id="last-update">—</span>
+            &nbsp;·&nbsp;
+            <span class="refresh-btn" onclick="loadMatches(true)">REFRESH NOW</span>
+        </div>
+    </div>
+
+    <div class="page-title">Football » Today » LIVE (Realtime)</div>
+
+    <div id="matches-container">
+        <div class="loading">Loading live matches...</div>
+    </div>
+
+    <div class="attribution">
+        Data from <a href="https://sportscore.com/" rel="dofollow" target="_blank">SportScore</a>
+        · Auto-refreshes every 40 seconds
+    </div>
+
+    <div class="footer">
+        Enhanced live view · Free realtime data · Gamble Responsibly. 18+
+    </div>
+
+    <script>
+        const API_URL = "https://sportscore.com/api/widget/matches/?sport=football&limit=50&src=flashscore-enhanced";
+        const REFRESH_MS = 40000; // 40 seconds
+        let refreshTimer = null;
+
+        function formatTime(iso) {
+            if (!iso) return "—";
+            try {
+                const d = new Date(iso);
+                return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+            } catch {
+                return "—";
+            }
+        }
+
+        function getMinuteClass(statusText) {
+            if (!statusText) return "minute";
+            const t = statusText.toLowerCase();
+            if (t.includes("half time") || t === "ht") return "minute ht";
+            return "minute";
+        }
+
+        function sortLive(a, b) {
+            // Prefer matches that look more advanced
+            const order = (txt) => {
+                if (!txt) return 0;
+                const t = txt.toLowerCase();
+                if (t.includes("2nd") || t.includes("second")) return 80;
+                if (t.includes("half time") || t === "ht") return 45;
+                if (t.includes("1st") || t.includes("first")) return 20;
+                if (t.includes("extra") || t.includes("pen")) return 100;
+                return 30;
+            };
+            return order(b.status_text) - order(a.status_text);
+        }
+
+        function renderMatches(matches) {
+            const container = document.getElementById("matches-container");
+            const live = matches.filter(m => m.status === "live");
+
+            document.getElementById("live-count").textContent = 
+                live.length === 0 ? "No live matches right now" : `${live.length} live match${live.length > 1 ? "es" : ""}`;
+
+            if (live.length === 0) {
+                container.innerHTML = `<div class="empty-state">No live football matches at the moment.<br>Check back soon or hit REFRESH NOW.</div>`;
+                return;
+            }
+
+            // Sort by approximate progress
+            live.sort(sortLive);
+
+            // Group by competition
+            const byLeague = {};
+            live.forEach(m => {
+                const league = m.competition || "Other";
+                if (!byLeague[league]) byLeague[league] = [];
+                byLeague[league].push(m);
+            });
+
+            let html = "";
+            for (const [league, list] of Object.entries(byLeague)) {
+                html += `<div class="league">${league}</div>`;
+                list.forEach(m => {
+                    const homeScore = m.home_score != null ? m.home_score : "–";
+                    const awayScore = m.away_score != null ? m.away_score : "–";
+                    const statusText = m.status_text || "LIVE";
+                    const minClass = getMinuteClass(statusText);
+
+                    html += `
+                        <div class="match">
+                            <div class="${minClass}">${statusText}</div>
+                            <div class="teams">
+                                <div class="team">
+                                    ${m.home_logo ? `<img src="${m.home_logo}" alt="" onerror="this.style.display='none'">` : ""}
+                                    <span class="team-name">${m.home || "Home"}</span>
+                                </div>
+                                <div class="team">
+                                    ${m.away_logo ? `<img src="${m.away_logo}" alt="" onerror="this.style.display='none'">` : ""}
+                                    <span class="team-name">${m.away || "Away"}</span>
+                                </div>
+                            </div>
+                            <div class="score-block">
+                                ${homeScore}<span class="sep">-</span>${awayScore}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            container.innerHTML = html;
+        }
+
+        async function loadMatches(manual = false) {
+            const container = document.getElementById("matches-container");
+            if (manual) {
+                container.innerHTML = `<div class="loading">Refreshing...</div>`;
+            }
+
+            try {
+                const res = await fetch(API_URL, { cache: "no-store" });
+                if (!res.ok) throw new Error("Network response was not ok");
+                const data = await res.json();
+                const matches = data.matches || [];
+                renderMatches(matches);
+                document.getElementById("last-update").textContent = new Date().toLocaleTimeString();
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<div class="error-state">
+                    Failed to load live data.<br>
+                    <span class="refresh-btn" onclick="loadMatches(true)">Try again</span>
+                </div>`;
+            }
+        }
+
+        // Initial load + auto refresh
+        loadMatches();
+        refreshTimer = setInterval(() => loadMatches(false), REFRESH_MS);
+
+        // Visibility change: refresh when user comes back to tab
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                loadMatches(false);
+            }
+        });
+    </script>
+</body>
+</html>
