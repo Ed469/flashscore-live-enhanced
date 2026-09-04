@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashscore Enhanced | LIVE (API-Football Free)</title>
+    <style>
+        :root {
+            --bg: #001e28;
+            --bg2: #0a2a36;
+            --bg3: #123040;
+            --text: #e8f0f4;
+            --text-muted: #8ba3b0;
+            --accent: #00a651;
+            --red: #e74c3c;
+            --yellow: #f1c40f;
+            --border: #1a3a48;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.4;
+            min-height: 100vh;
+        }
+        .header {
+            background: #00141c;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+        .logo span { color: var(--accent); }
+        .key-box {
+            background: var(--bg2);
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .key-box label { font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px; }
+        .key-row { display: flex; gap: 8px; }
+        .key-row input {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 13px;
+        }
+        .key-row button {
+            padding: 8px 14px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .key-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .warning {
+            background: #3a2a00;
+            color: #f1c40f;
+            padding: 8px 12px;
+            font-size: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .status-bar {
+            padding: 8px 12px;
+            background: var(--bg2);
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            border-bottom: 1px solid var(--border);
+        }
+        .live-dot {
+            display: inline-block;
+            width: 8px; height: 8px;
+            background: var(--red);
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .refresh-btn { color: var(--accent); font-weight: 600; cursor: pointer; }
+        .page-title {
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+        .league {
+            background: var(--bg2);
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+        }
+        .match {
+            display: grid;
+            grid-template-columns: 55px 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 11px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .match:hover { background: var(--bg3); }
+        .minute { font-weight: 700; color: var(--accent); font-size: 13px; text-align: center; }
+        .minute.ht { color: var(--yellow); }
+        .teams { min-width: 0; }
+        .team {
+            display: flex; align-items: center; gap: 8px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            padding: 2px 0;
+        }
+        .team img { width: 18px; height: 18px; object-fit: contain; flex-shrink: 0; }
+        .team-name { overflow: hidden; text-overflow: ellipsis; }
+        .score-block {
+            text-align: center;
+            min-width: 50px;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .score-block .sep { color: var(--text-muted); font-weight: 400; }
+        .empty-state, .error-state, .loading {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .error-state { color: var(--red); }
+        .footer {
+            padding: 14px 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+        .note {
+            padding: 10px 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Flashscore<span>.mobi</span> Enhanced</div>
+        <div style="font-size:12px;color:var(--text-muted);">API-Football Free Plan version (100 req/day)</div>
+    </div>
+
+    <div class="key-box">
+        <label>Paste your free API-Football key (saved only in your browser)</label>
+        <div class="key-row">
+            <input type="password" id="apiKey" placeholder="Your x-apisports-key" autocomplete="off">
+            <button id="saveBtn" onclick="saveKey()">Save & Load</button>
+        </div>
+    </div>
+
+    <div class="warning">
+        ⚠ Free plan = max 100 requests/day. This page refreshes every 8 minutes automatically (and on manual refresh) to stay under the limit.
+    </div>
+
+    <div class="status-bar">
+        <div><span class="live-dot"></span><span id="live-count">Enter API key to start</span></div>
+        <div>
+            Last update: <span id="last-update">—</span>
+            &nbsp;·&nbsp;
+            <span class="refresh-btn" onclick="loadMatches(true)">REFRESH NOW</span>
+        </div>
+    </div>
+
+    <div class="page-title">Football » LIVE (Free Plan)</div>
+    <div class="note">
+        Sorted by match progress. For full (a-b),(c-d) scores + red cards & subs by half you need the Pro plan ($19/mo).
+    </div>
+
+    <div id="matches-container">
+        <div class="empty-state">Paste your free API key above and click “Save & Load”</div>
+    </div>
+
+    <div class="footer">
+        Data via API-Football · Free tier limited to 100 requests/day<br>
+        Get your free key at <a href="https://www.api-football.com/" target="_blank" style="color:var(--accent)">api-football.com</a>
+    </div>
+
+    <script>
+        const STORAGE_KEY = "apifootball_free_key";
+        const REFRESH_MS = 8 * 60 * 1000; // 8 minutes
+        let refreshTimer = null;
+
+        // Load saved key
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            document.getElementById("apiKey").value = saved;
+        }
+
+        function saveKey() {
+            const key = document.getElementById("apiKey").value.trim();
+            if (!key) {
+                alert("Please paste your API key first");
+                return;
+            }
+            localStorage.setItem(STORAGE_KEY, key);
+            loadMatches(true);
+        }
+
+        function getKey() {
+            return localStorage.getItem(STORAGE_KEY) || document.getElementById("apiKey").value.trim();
+        }
+
+        function getMinuteClass(status) {
+            if (!status) return "minute";
+            const s = status.short || status.long || "";
+            if (s === "HT" || (s + "").toLowerCase().includes("half")) return "minute ht";
+            return "minute";
+        }
+
+        function statusText(status) {
+            if (!status) return "LIVE";
+            return status.long || status.short || "LIVE";
+        }
+
+        function elapsed(status) {
+            if (!status) return "";
+            if (status.elapsed != null) return status.elapsed + "'";
+            return status.short || "";
+        }
+
+        function sortLive(a, b) {
+            const ea = (a.fixture.status && a.fixture.status.elapsed) || 0;
+            const eb = (b.fixture.status && b.fixture.status.elapsed) || 0;
+            return eb - ea; // highest minute first
+        }
+
+        function renderMatches(fixtures) {
+            const container = document.getElementById("matches-container");
+            const live = (fixtures || []).filter(f => {
+                const s = f.fixture && f.fixture.status && f.fixture.status.short;
+                return ["1H","2H","HT","ET","BT","P","LIVE","INT"].includes(s);
+            });
+
+            document.getElementById("live-count").textContent =
+                live.length === 0 ? "No live matches" : `${live.length} live match${live.length > 1 ? "es" : ""}`;
+
+            if (live.length === 0) {
+                container.innerHTML = `<div class="empty-state">No live football matches right now.<br>Try again later or hit REFRESH NOW.</div>`;
+                return;
+            }
+
+            live.sort(sortLive);
+
+            // Group by league
+            const byLeague = {};
+            live.forEach(f => {
+                const league = (f.league && (f.league.name || f.league.country)) || "Other";
+                if (!byLeague[league]) byLeague[league] = [];
+                byLeague[league].push(f);
+            });
+
+            let html = "";
+            for (const [league, list] of Object.entries(byLeague)) {
+                html += `<div class="league">${league}</div>`;
+                list.forEach(f => {
+                    const home = f.teams.home;
+                    const away = f.teams.away;
+                    const goals = f.goals || {};
+                    const status = f.fixture.status || {};
+                    const minDisplay = elapsed(status) || statusText(status);
+                    const minClass = getMinuteClass(status);
+
+                    html += `
+                        <div class="match">
+                            <div class="${minClass}">${minDisplay}</div>
+                            <div class="teams">
+                                <div class="team">
+                                    ${home.logo ? `<img src="${home.logo}" alt="" onerror="this.style.display='none'">` : ""}
+                                    <span class="team-name">${home.name}</span>
+                                </div>
+                                <div class="team">
+                                    ${away.logo ? `<img src="${away.logo}" alt="" onerror="this.style.display='none'">` : ""}
+                                    <span class="team-name">${away.name}</span>
+                                </div>
+                            </div>
+                            <div class="score-block">
+                                ${goals.home != null ? goals.home : "–"}
+                                <span class="sep">-</span>
+                                ${goals.away != null ? goals.away : "–"}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            container.innerHTML = html;
+        }
+
+        async function loadMatches(manual = false) {
+            const key = getKey();
+            if (!key) {
+                document.getElementById("matches-container").innerHTML =
+                    `<div class="empty-state">Paste your free API key above and click “Save & Load”</div>`;
+                return;
+            }
+
+            const container = document.getElementById("matches-container");
+            if (manual) container.innerHTML = `<div class="loading">Loading live matches...</div>`;
+
+            try {
+                const res = await fetch("https://v3.football.api-sports.io/fixtures?live=all", {
+                    headers: {
+                        "x-apisports-key": key
+                    },
+                    cache: "no-store"
+                });
+
+                if (res.status === 429 || res.status === 403) {
+                    throw new Error("Rate limit or invalid key (free plan = 100 requests/day)");
+                }
+                if (!res.ok) throw new Error("HTTP " + res.status);
+
+                const data = await res.json();
+                if (data.errors && Object.keys(data.errors).length) {
+                    throw new Error(JSON.stringify(data.errors));
+                }
+
+                renderMatches(data.response || []);
+                document.getElementById("last-update").textContent = new Date().toLocaleTimeString();
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<div class="error-state">
+                    ${err.message || "Failed to load"}<br>
+                    <span class="refresh-btn" onclick="loadMatches(true)">Try again</span>
+                </div>`;
+            }
+        }
+
+        // Auto start if key already saved
+        if (saved) {
+            loadMatches(false);
+            refreshTimer = setInterval(() => loadMatches(false), REFRESH_MS);
+        }
+
+        // Restart timer when key is saved
+        const originalSave = saveKey;
+        window.saveKey = function() {
+            originalSave();
+            if (refreshTimer) clearInterval(refreshTimer);
+            refreshTimer = setInterval(() => loadMatches(false), REFRESH_MS);
+        };
+    </script>
+</body>
+</html>
